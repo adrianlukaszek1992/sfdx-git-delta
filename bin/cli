@@ -30,6 +30,7 @@ const options = program
   .option('-a, --api-version [version]', 'salesforce API version [50]', '50')
   .option('-r, --repo [dir]', 'git repository location [.]', '.')
   .option('-d, --generate-delta', 'generate delta files in [./output] folder')
+  .option('-m, --commit-message [message]', 'get all changes between commits with given message')
   .parse(process.argv)
   .opts()
 

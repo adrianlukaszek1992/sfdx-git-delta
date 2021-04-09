@@ -96,7 +96,7 @@
     "typescript": "^4.2.3"
   },
   "oclif": {
-    "commands": "./lib/commands",
+    "commands": "./src/commands",
     "bin": "sfdx",
     "devPlugins": [
       "@oclif/plugin-help"

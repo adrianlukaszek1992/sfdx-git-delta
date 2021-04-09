@@ -10,4 +10,5 @@ module.exports = {
   ignoreDestructiveFlag: 'ignore file to use',
   apiVersionFlag: 'salesforce API version',
   deltaFlag: 'generate delta files in [--output] folder',
+  messageFlag: 'get all changes between commits with given message',
 }

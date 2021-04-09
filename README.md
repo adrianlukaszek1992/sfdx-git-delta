@@ -61,6 +61,7 @@ To view the full list and description of the sgd options, run `sfdx sgd:source:d
 -i, --ignore specify the ignore file (default: ".forceignore")
 -D, --ignore-destructive specify the ignore file (default: ".forceignore")
 -r, --repo [dir] git repository location [.] (default: ".")
+'-m, --commit-message [message] get all changes between commits with given message'
 -d, --generate-delta generate delta files in [./output] folder
 -h, --help output usage information
 ```
@@ -179,6 +180,11 @@ sfdx force:mdapi:deploy -d destructiveChanges --ignorewarnings
 
 And voilà! 🥳
 
+### Get all changes between commits with given message:
+
+bin\run sgd:source:delta -m your-commit-message --output .
+
+
 ### Diff between branches:
 
 SGD works with any git sha pointer: commit sha, branch, tag, git expression (HEAD, etc.).
@@ -256,6 +262,7 @@ Note that in a situatrion where only the `--ignore [-i]` parameter is specified 
 const sgd = require('sfdx-git-delta')
 
 const work = sgd({
+  message: '', // commit message to get commits for
   to: '', // commit sha to where the diff is done. Default : HEAD
   from: '', // commit sha from where the diff is done. Default : git rev-list --max-parents=0 HEAD
   output: '', // source package specific output. Default : ./output

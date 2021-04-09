@@ -1,75 +1,75 @@
-'use strict'
-const PackageConstructor = require('./utils/packageConstructor')
-const TypeHandlerFactory = require('./service/typeHandlerFactory')
-const metadataManager = require('./metadata/metadataManager')
-const repoSetup = require('./utils/repoSetup')
-const repoGitDiff = require('./utils/repoGitDiff')
+'use strict';
+const PackageConstructor = require('./utils/packageConstructor');
+const TypeHandlerFactory = require('./service/typeHandlerFactory');
+const metadataManager = require('./metadata/metadataManager');
+const repoSetup = require('./utils/repoSetup');
+const repoGitDiff = require('./utils/repoGitDiff');
 
-const fs = require('fs')
-const fse = require('fs-extra')
-const git = require('git-state')
-const path = require('path')
+const fs = require('fs');
+const fse = require('fs-extra');
+const git = require('git-state');
+const path = require('path');
 
-const DESTRUCTIVE_CHANGES_FILE_NAME = 'destructiveChanges'
-const PACKAGE_FILE_NAME = 'package'
-const XML_FILE_EXTENSION = 'xml'
+const DESTRUCTIVE_CHANGES_FILE_NAME = 'destructiveChanges';
+const PACKAGE_FILE_NAME = 'package';
+const XML_FILE_EXTENSION = 'xml';
 
 const checkConfig = config => {
-  const errors = []
-  if (typeof config.to !== 'string') {
-    errors.push(`to ${config.to} is not a sha`)
+  const errors = [];
+  if (typeof config.to !== 'string' && !config.commitMessage) {
+    errors.push(`to ${config.to} is not a sha`);
   }
   if (isNaN(config.apiVersion)) {
-    errors.push(`api-version ${config.apiVersion} is not a number`)
+    errors.push(`api-version ${config.apiVersion} is not a number`);
   }
   if (
     !fs.existsSync(config.output) ||
     !fs.statSync(config.output).isDirectory()
   ) {
-    errors.push(`${config.output} folder does not exist`)
+    errors.push(`${config.output} folder does not exist`);
   }
 
   if (!git.isGitSync(config.repo)) {
-    errors.push(`${config.repo} is not a git repository`)
+    errors.push(`${config.repo} is not a git repository`);
   }
 
-  return errors
-}
+  return errors;
+};
 
 module.exports = config => {
-  const inputError = checkConfig(config)
+  const inputError = checkConfig(config);
   if (inputError.length > 0) {
-    throw new Error(inputError)
+    throw new Error(inputError);
   }
-  config.apiVersion = parseInt(config.apiVersion)
-  repoSetup(config)
+  config.apiVersion = parseInt(config.apiVersion);
+  repoSetup(config);
 
   const metadata = metadataManager.getDefinition(
     'directoryName',
-    config.apiVersion
-  )
+    config.apiVersion,
+  );
 
-  const lines = repoGitDiff(config, metadata)
-  const work = treatDiff(config, lines, metadata)
-  treatPackages(work.diffs, config, metadata)
-  return work
-}
+  const lines = repoGitDiff(config, metadata);
+  const work = treatDiff(config, lines, metadata);
+  treatPackages(work.diffs, config, metadata);
+  return work;
+};
 
 const treatDiff = (config, lines, metadata) => {
   const work = {
     config: config,
     diffs: { package: {}, destructiveChanges: {} },
     warnings: [],
-  }
+  };
 
-  const typeHandlerFactory = new TypeHandlerFactory(work, metadata)
+  const typeHandlerFactory = new TypeHandlerFactory(work, metadata);
 
-  lines.forEach(line => typeHandlerFactory.getTypeHandler(line).handle())
-  return work
-}
+  lines.forEach(line => typeHandlerFactory.getTypeHandler(line).handle());
+  return work;
+};
 
 const treatPackages = (dcJson, config, metadata) => {
-  cleanPackages(dcJson)
+  cleanPackages(dcJson);
   const pc = new PackageConstructor(config, metadata)
   ;[
     {
@@ -88,20 +88,20 @@ const treatPackages = (dcJson, config, metadata) => {
       xmlContent: pc.constructPackage({}),
     },
   ].forEach(op => {
-    const location = path.join(config.output, op.folder, op.filename)
-    fse.outputFileSync(location, op.xmlContent)
-  })
-}
+    const location = path.join(config.output, op.folder, op.filename);
+    fse.outputFileSync(location, op.xmlContent);
+  });
+};
 
 const cleanPackages = dcJson => {
-  const additive = dcJson[PACKAGE_FILE_NAME]
-  const destructive = dcJson[DESTRUCTIVE_CHANGES_FILE_NAME]
+  const additive = dcJson[PACKAGE_FILE_NAME];
+  const destructive = dcJson[DESTRUCTIVE_CHANGES_FILE_NAME];
   Object.keys(additive)
     .filter(type => Object.prototype.hasOwnProperty.call(destructive, type))
     .forEach(
       type =>
         (destructive[type] = new Set(
-          [...destructive[type]].filter(element => !additive[type].has(element))
-        ))
-    )
-}
+          [...destructive[type]].filter(element => !additive[type].has(element)),
+        )),
+    );
+};
